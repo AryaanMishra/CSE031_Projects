@@ -1,15 +1,35 @@
+//TO RUN:
+//gcc wordsearch_1.c -o jer
+//.\jer.exe puzzle1.txt
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-
 // Declarations of the two functions you will implement
 // Feel free to declare any helper functions or global variables
+
+struct position{
+    int row;
+    int column;
+};
+
+struct node{
+    int wordindex;
+    int row;
+    int column;
+    struct node *next;
+};
+
+struct node *head = NULL;
+
 void printPuzzle(char** arr);
 void searchPuzzle(char** arr, char* word);
+int search(char** arr, int row, int column, int curr, char* word, bool* completePath);
+int validPos(int row, int column);
 int bSize;
-int explorePaths(char** arr, char* word, int row, int col, int index, int* isFound, int* pathCount, int* pathIndices);
-int pathIndices[1000];
+void push(int wordindex,int row, int column);
+void pop();
 
 
 // Main function, DO NOT MODIFY 	
@@ -58,116 +78,250 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void printPath(char** arr, int gridSize, int* pathIndices);
-
 void printPuzzle(char** arr) {
-  // Iterate through each row and column of the grid
-  for (int i = 0; i < bSize; i++) {
-    for (int j = 0; j < bSize; j++) {
-      printf("%c ", arr[i][j]);
+    for(int i =0; i < bSize; i++){ 
+        for(int j = 0; j < bSize; j++){ 
+            printf("%c ", *(*(arr+i)+j));
+        }
+        printf("\n"); 
     }
-    printf("\n");
-  }
 }
 
-void searchPuzzle(char** arr, char* word) {
-    int wordLen = strlen(word);
-    int isFound = 0; // Flag to track if word is found
-    int pathCount = 0; // Count valid paths found
+void uppercase(char* word){
+    int length = strlen(word);
+    for (int i = 0; i < length; i++){
+        if(*(word+i) >= 'a' && *(word+i) <= 'z'){
+            *(word+i) -= 32;
+        }
+    }
+}
 
-    // Iterate through each cell of the grid
-    for (int i = 0; i < bSize; i++) {
-        for (int j = 0; j < bSize; j++) {
-            // Check if current cell matches the first letter (case-insensitive)
-            if (tolower(arr[i][j]) == tolower(word[0])) {
-                // Mark current cell as visited to avoid revisiting in backtracking
-                arr[i][j] = '#';
+void searchPuzzle(char** arr, char* word){
+    uppercase(word);
+    int found = 0;
+    int temp = 0; 
+    int start = 1;
 
-                // Explore paths recursively from the current cell
-                if (explorePaths(arr, word, i, j, 1, &isFound, &pathCount, 0)) {
-                    // If word is found and we haven't exceeded max paths, print the path
-                    if (pathCount <= 1) { // Limit to 1 path (basic requirement)
-                        printf("Word found!\n");
-                        printf("Printing the search path:\n");
-                        printPath(arr, bSize, pathIndices); // Print path using helper
-                    } else {
-                        printf("More than 1 path found (bonus feature).\n");
+    for(int i = 0; i < bSize; i++){
+        for(int j = 0; j < bSize; j++){
+            int row = i;
+            int column = j;
+            if(*(word) == *(*(arr + i) + j)){
+                if(strlen(word) > 1){
+                    push(start, i, j);
+                    temp = search(arr, row, column, start, word);
+                    found += temp;
+                    if(temp == 0){
+                        pop();
                     }
-                    pathCount = 0; // Reset path count for next iterations
-                    isFound = 0; // Reset flag for next iterations
+                }else{
+                    found += 1;
                 }
-
-                // Reset the visited cell
-                arr[i][j] = word[0]; // Restore original character
-            }
-        }
-    }
-
-    // Final check and message if word not found
-    if (!isFound) {
-        printf("Word not found\n");
-    }
-}
-
-// Helper function to explore paths recursively from a given cell
-int explorePaths(char** arr, char* word, int row, int col, int index, int* isFound, int* pathCount, int* pathIndices) {
-    // Base case: all characters of the word are found, set flag and return
-    if (index == strlen(word)) {
-        *isFound = 1;
-        (*pathCount)++; // Increment path count
-
-        // If limited to 1 path, store indices
-        if (*pathCount <= 1) {
-            pathIndices[index - 1] = row * bSize + col;
-        }
-
-        return 1;
-    }
-
-    // Check all 8 adjacent cells (up, down, left, right, diagonals)
-    int directions[8][2] = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
-    for (int i = 0; i < 8; i++) {
-        int newRow = row + directions[i][0];
-        int newCol = col + directions[i][1];
-
-        // Check if new cell is within grid bounds and matches next character (case-insensitive)
-        if (newRow >= 0 && newRow < bSize && newCol >= 0 && newCol < bSize &&
-            tolower(arr[newRow][newCol]) == tolower(word[index])) {
-            // Mark visited cell
-            arr[newRow][newCol] = '#';
-
-            // Explore path recursively from the new cell
-            if (explorePaths(arr, word, newRow, newCol, index + 1, isFound, pathCount, pathIndices)) {
-                // Backtrack: reset visited cell and return
-                arr[newRow][newCol] = word[index - 1];
-                return 1;
             }
 
-            // Unmark visited cell if path not found
-            arr[newRow][newCol] = word[index];
         }
+
+    }
+    if(found == 0){
+        printf(("\nWord not found!\n"));
+    }else{
+        printf("\nWord found!\n");
+        printf("\nPrinting the search path\n");
+        for(int i =0; i < bSize; i++){
+            for(int j = 0; j < bSize; j++){
+                struct node* current = head;
+                int counter = 0;
+                while(current != NULL){
+                    if(i == current -> row && j == current -> column){
+                        printf("%d", current -> wordindex);
+                        counter++;
+                    }
+                    current = current -> next;
+                }
+                if(counter == 0){
+                    printf("0");
+                    counter++;
+                }
+                for(int k = 0; k < 8-counter; k++){
+                    printf(" ");
+                }
+            }
+            printf("\n");
+        }
+
     }
 
-    return 0; // No path found from current cell
 }
 
-// Helper function to print the path based on stored indices
-void printPath(char** arr, int gridSize, int* pathIndices) {
-    int pathLen = sizeof(pathIndices) / sizeof(pathIndices[0]); // Assuming pathIndices is an array
-
-    // Iterate through stored path indices
-    for (int i = 0; i < pathLen; i++) {
-        int index = pathIndices[i];
-        int row = index / gridSize;
-        int col = index % gridSize;
-
-        // Convert row and column indices to human-readable coordinates
-        int x = row + 1; // Adjust for 1-based indexing
-        int y = col + 1;
-
-        // Print coordinates with appropriate spacing
-        printf("%d %d ", x, y);
+int validPos(int row, int column){
+    if(row < 0 || row >= bSize || column < 0 || column >= bSize){
+        return 0;
     }
-
-    printf("\n"); // Add newline at the end
+    return 1;
 }
+
+void push(int wordindex, int row, int column){
+    struct node* temp = malloc(sizeof(struct node));
+    temp -> wordindex = wordindex;
+    temp -> row = row;
+    temp -> column = column;
+    temp -> next = head;
+    head = temp;
+}
+
+void pop(){
+    if(head != NULL){
+        struct node *temp;
+        temp = head;
+        head = head -> next;
+        free(temp);
+    }
+}
+
+int search(char** arr, int row, int column, int curr, char* word, bool* completePath) {
+  int found = 0;
+  *completePath = false; // Initialize completePath flag to false
+
+  if (*(word + curr) == '\0') {
+    return 1; // Found the entire word
+  }
+
+  // Check surrounding cells in a specific order (prioritize down, right, up, left)
+  if (validPos(row - 1, column) == 1 && *(word + curr) == *(*(arr + row - 1) + column)) {
+    push(curr + 1, row - 1, column);
+    found = search(arr, row - 1, column, curr + 1, word, completePath);
+    if (found == 1) {
+      return found; // Found the entire word on this path, terminate further exploration
+    }
+    pop();
+  }
+
+  if (validPos(row, column + 1) == 1 && *(word + curr) == *(*(arr + row) + column + 1)) {
+    push(curr + 1, row, column + 1);
+    found = search(arr, row, column + 1, curr + 1, word);
+    if (found == 1) {
+      return found; // Found the entire word on this path, terminate further exploration
+    }
+    pop();
+  }
+
+  if (validPos(row + 1, column) == 1 && *(word + curr) == *(*(arr + row + 1) + column)) {
+    push(curr + 1, row + 1, column);
+    found = search(arr, row + 1, column, curr + 1, word);
+    if (found == 1) {
+      return found; // Found the entire word on this path, terminate further exploration
+    }
+    pop();
+  }
+
+  if (validPos(row, column - 1) == 1 && *(word + curr) == *(*(arr + row) + column - 1)) {
+    push(curr + 1, row, column - 1);
+    found = search(arr, row, column - 1, curr + 1, word);
+    if (found == 1) {
+      return found; // Found the entire word on this path, terminate further exploration
+    }
+    pop();
+  }
+
+  return found; // No match found in surrounding cells
+}
+
+
+// int search(char** arr, int row, int column, int curr, char* word) {
+//   int found = 0;
+//   int tempresult = 0;
+//   if (*(word + curr) == '\0') {
+//     return 1;
+//   }
+
+//   if (validPos(row - 1, column - 1) == 1) {
+//     if (*(word + curr) == *(*(arr + row - 1) + column - 1)) {
+//       push(curr + 1, row - 1, column - 1);
+//       tempresult = search(arr, row - 1, column - 1, curr + 1, word);
+//       found += tempresult;
+//       // Only pop if the recursive call doesn't find the remaining characters
+//       if (tempresult != 1) {
+//         pop();
+//       }
+//     }
+//   }
+
+//   if (validPos(row - 1, column) == 1) {
+//     if (*(word + curr) == *(*(arr + row - 1) + column)) {
+//       push(curr + 1, row - 1, column);
+//       tempresult = search(arr, row - 1, column, curr + 1, word);
+//       found += tempresult;
+//       if (tempresult != 1) {
+//         pop();
+//       }
+//     }
+//   }
+
+//   if (validPos(row - 1, column + 1) == 1) {
+//     if (*(word + curr) == *(*(arr + row - 1) + column + 1)) {
+//       push(curr + 1, row - 1, column + 1);
+//       tempresult = search(arr, row - 1, column + 1, curr + 1, word);
+//       found += tempresult;
+//       if (tempresult != 1) {
+//         pop();
+//       }
+//     }
+//   }
+
+//   if (validPos(row, column - 1) == 1) {
+//     if (*(word + curr) == *(*(arr + row) + column - 1)) {
+//       push(curr + 1, row, column - 1);
+//       tempresult = search(arr, row, column - 1, curr + 1, word);
+//       found += tempresult;
+//       if (tempresult != 1) {
+//         pop();
+//       }
+//     }
+//   }
+
+//   if (validPos(row, column + 1) == 1) {
+//     if (*(word + curr) == *(*(arr + row) + column + 1)) {
+//       push(curr + 1, row, column + 1);
+//       tempresult = search(arr, row, column + 1, curr + 1, word);
+//       found += tempresult;
+//       if (tempresult != 1) {
+//         pop();
+//       }
+//     }
+//   }
+
+//   if (validPos(row + 1, column - 1) == 1) {
+//     if (*(word + curr) == *(*(arr + row + 1) + column - 1)) {
+//       push(curr + 1, row + 1, column - 1);
+//       tempresult = search(arr, row + 1, column - 1, curr + 1, word);
+//       found += tempresult;
+//       if (tempresult != 1) {
+//         pop();
+//       }
+//     }
+//   }
+
+//   if (validPos(row + 1, column) == 1) {
+//     if (*(word + curr) == *(*(arr + row + 1) + column)) {
+//       push(curr + 1, row + 1, column);
+//       tempresult = search(arr, row + 1, column, curr + 1, word);
+//       found += tempresult;
+//       if (tempresult != 1) {
+//         pop();
+//       }
+//     }
+//   }
+
+//   if (validPos(row + 1, column + 1) == 1) {
+//     if (*(word + curr) == *(*(arr + row + 1) + column + 1)) {
+//         push(curr + 1, row + 1, column + 1);
+//         tempresult = search(arr, row + 1, column + 1, curr + 1, word);
+//         found += tempresult;
+//         if (tempresult != 1) {
+//             pop();
+//         }
+//         }
+//     }
+//   return found;
+// }
+
