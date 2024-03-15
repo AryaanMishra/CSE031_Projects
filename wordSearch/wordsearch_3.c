@@ -64,10 +64,6 @@ int main(int argc, char **argv) {
 }
 
 void printPuzzle(char** arr) {
-	// This function will print out the complete puzzle grid (arr). 
-    // It must produce the output in the SAME format as the samples 
-    // in the instructions.
-    // Your implementation here...
     for(int i = 0; i < bSize; i++){
         for(int j = 0; j < bSize; j++){
             printf("%c ", *(*(arr + i) + j));
@@ -77,11 +73,6 @@ void printPuzzle(char** arr) {
 }
 
 void searchPuzzle(char** arr, char* word) {
-    // This function checks if arr contains the search word. If the 
-    // word appears in arr, it will print out a message and the path 
-    // as shown in the sample runs. If not found, it will print a 
-    // different message as shown in the sample runs.
-    // Your implementation here...
 
     int foundWord = 0; //boolean - if word is found, set to 1
 
