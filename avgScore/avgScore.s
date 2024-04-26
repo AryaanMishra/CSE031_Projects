@@ -4,12 +4,12 @@ orig: .space 100	# reserve memery of 1000 bytes In terms of bytes (25 elements *
 sorted: .space 100  # another reserved memory space of 100 bytes, where the sorted scores in descending order will be stored.
 
 
-str0: .asciiz "\nEnter the number of assignments (between 1 and 25): "
-str1: .asciiz "\nEnter score: "
-str2: .asciiz "\nOriginal scores: "
-str3: .asciiz "\nSorted scores (in descending order): "
-str4: .asciiz "\nEnter the number of (lowest) scores to drop: "
-str5: .asciiz "\nAverage (rounded up) with dropped scores removed: "
+str0: .asciiz "Enter the number of assignments (between 1 and 25): "
+str1: .asciiz "Enter score: "
+str2: .asciiz "Original scores: "
+str3: .asciiz "Sorted scores (in descending order): "
+str4: .asciiz "Enter the number of (lowest) scores to drop: "
+str5: .asciiz "Average (rounded up) with dropped scores removed: "
 
 
 .text 
@@ -141,8 +141,8 @@ selSort:
 	# Your implementation of selSort here
 	move $t2, $zero	 #t2 == i
 	
-	sel_loop1:
-		bge $t2, $a0, sel_init	# if not equal to size of array then branch to sel_init
+	selLoop1:
+		bge $t2, $a0, selInit	# if not equal to size of array then branch to sel_init
 		sll $s5, $t2, 2  	# t5 is offset
 		
 		add $t6, $s1, $s5
@@ -153,22 +153,22 @@ selSort:
 		sw $t8, 0($t7)
 
 		addi $t2, $t2, 1	# i++
-		j sel_loop1
+		j selLoop1
 		
-	sel_init:
+	selInit:
 		# initialization of i, j, temp 
 		move $t2, $zero	 	# t2 == i
 		move $t3, $zero	 	# t3 == j
 		move $t4, $zero	 	# t4 == temp
 		addi $t9, $a0, -1  # len-1 # t9 == len - 1
 		
-	sel_loop2:
-		bge $t2, $t9, sel_end # if i == len - 1, branch to end
+	selLoop2:
+		bge $t2, $t9, selEnd # if i == len - 1, branch to end
 		add $t1, $t2, $zero # t1 == maxIndex
 		
 		addi $t3, $t2, 1  # j = i + 1
-		sel_loop3:
-			bge $t3, $a0, sel_swap # if j == len, branch to end of loop3 (swapping)
+		selLoop3:
+			bge $t3, $a0, selSwap # if j == len, branch to end of loop3 (swapping)
 			
 			# load sorted[j]
 			sll $t5, $t3, 2
@@ -181,16 +181,16 @@ selSort:
 			lw $t6, 0($t6)
 			
 			# if (sorted[j] > sorted[maxIndex])
-			ble $t5, $t6, sel_end3
+			ble $t5, $t6, selEnd3
 			add $t1, $t3, $zero # maxIndex == j
 			
-			j sel_loop3 # loop
+			j selLoop3 # loop
 
-		sel_end3:
+		selEnd3:
 			addi $t3, $t3, 1 # j++
-			j sel_loop3 # loop
+			j selLoop3 # loop
 			
-		sel_swap:
+		selSwap:
 			#  temp == sorted[maxIndex]
 			sll $t7, $t1, 2
 			add $t7, $t7, $s2
@@ -207,8 +207,8 @@ selSort:
 			sw $t4, ($t8)
 		
 			addi $t2, $t2, 1
-			j sel_loop2
-	sel_end:
+			j selLoop2
+	selEnd:
 		jr $ra
 	
 	
@@ -224,8 +224,8 @@ calcSum:
 	sw $a1, 4($sp)
 	addi $a1, $a1, -1
 	
-	calc_Loop:
-		ble $a1, $0, calc_End
+	calcLoop:
+		ble $a1, $0, calcEnd
 		
 		addi $a1, $a1, -1
 		sll $t1, $a1, 2
@@ -234,9 +234,9 @@ calcSum:
 		lw $t2, 0($t1)
 		add $t0, $t0, $t2
 		
-		jal calc_Loop
+		jal calcLoop
 		
-	calc_End:
+	calcEnd:
 		lw $t3, 4($sp)
 		
 		addi $t3, $t3, -1
