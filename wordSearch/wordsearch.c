@@ -134,12 +134,14 @@ bool checkLetter(char** arr, char* word, int count, int i, int j){
 
 // Function to update the path in the output array
 void updatePath(int** arr_out, int count, int i, int j){
-    *(*(arr_out + i) + j) = *(*(arr_out + i) + j) * 10 + count + 1;
+    *(*(arr_out + i) + j) = *(*(arr_out + i) + j) * 10 + count + 1; //allows us to store multiple position in a single cell of an array
 }
 
 // Function to find a letter in the puzzle
+//bool first checks if this is the first attempt to find the word
 bool findLetter(char** arr, char* word, int count, int i, int j, int** arr_out, bool first){
     // Check if the indices are within bounds and if the letter matches
+    // Checks if the letter at that position matches the count-th letter of the word
     if (!checkBounds(i, j) || !checkLetter(arr, word, count, i, j)){
         return false;
     }
@@ -245,7 +247,7 @@ bool findWord(char** arr, char* word, int** arr_out){
             // If the word is not found, reset the path
             for (int i = 0; i < bSize; i++){
                 for (int j = 0; j < bSize; j++){
-                    *(*(arr_out + i) + j) = 0;      
+                    *(*(arr_out + i) + j) = 0;
                 }
             }
         }
@@ -257,7 +259,7 @@ bool findWord(char** arr, char* word, int** arr_out){
 // Function to search the puzzle for a word
 void searchPuzzle(char** arr, char* word){
     toUpper(word);
-    
+
     // Initialize the output array
     int** arr_out = (int**)malloc(bSize * sizeof(int*));
     for (int i = 0; i < bSize; i++){
